@@ -1,0 +1,2 @@
+rootProject.name = 'metawear'
+include 'com.mbientlab:metawear:4.0.0'
