@@ -6,6 +6,29 @@ import 'package:metawear/data/angular_velocity.dart';
 import 'package:metawear/data/magnetic_field.dart';
 import 'package:metawear/data/quaternion.dart';
 
+enum SensorFusionBoschMode {
+  SLEEP,
+  NDOF,
+  IMU_PLUS,
+  COMPASS,
+  M4G,
+}
+
+enum SensorFusionBoschAccRange {
+  AR_2G,
+  AR_4G,
+  AR_8G,
+  AR_16G,
+}
+
+enum SensorFusionBoschGyroRange {
+  GR_2000DPS,
+  GR_1000DPS,
+  GR_500DPS,
+  GR_250DPS,
+  GR_125DPS,
+}
+
 class SensorFusionBoschModule {
   final MethodChannel _channel;
 
@@ -85,27 +108,51 @@ class SensorFusionBoschModule {
     }
   }
 
-  void startCorrectedAcceleration() async {
+  void startCorrectedAcceleration({
+    required SensorFusionBoschMode mode,
+    required SensorFusionBoschAccRange accRange,
+    required SensorFusionBoschGyroRange gyroRange,
+  }) async {
     if (isAccelerometerActive) {
       return;
     }
-    await _channel.invokeMethod('startCorrectedAcceleration');
+    await _channel.invokeMethod('startCorrectedAcceleration', {
+      'mode': mode.name,
+      'accRange': accRange.name,
+      'gyroRange': gyroRange.name,
+    });
     isAccelerometerActive = true;
   }
 
-  void startCorrectedAngularVelocity() async {
+  void startCorrectedAngularVelocity({
+    required SensorFusionBoschMode mode,
+    required SensorFusionBoschAccRange accRange,
+    required SensorFusionBoschGyroRange gyroRange,
+  }) async {
     if (isGyroscopeActive) {
       return;
     }
-    await _channel.invokeMethod('startCorrectedAngularVelocity');
+    await _channel.invokeMethod('startCorrectedAngularVelocity', {
+      'mode': mode.name,
+      'accRange': accRange.name,
+      'gyroRange': gyroRange.name,
+    });
     isGyroscopeActive = true;
   }
 
-  void startCorrectedMagneticField() async {
+  void startCorrectedMagneticField({
+    required SensorFusionBoschMode mode,
+    required SensorFusionBoschAccRange accRange,
+    required SensorFusionBoschGyroRange gyroRange,
+  }) async {
     if (isMagnetometerActive) {
       return;
     }
-    await _channel.invokeMethod('startCorrectedMagneticField');
+    await _channel.invokeMethod('startCorrectedMagneticField', {
+      'mode': mode.name,
+      'accRange': accRange.name,
+      'gyroRange': gyroRange.name,
+    });
     isMagnetometerActive = true;
   }
 

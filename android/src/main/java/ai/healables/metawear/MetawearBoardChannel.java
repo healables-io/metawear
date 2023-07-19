@@ -38,13 +38,32 @@ public class MetawearBoardChannel implements MethodChannel.MethodCallHandler {
         return board;
     }
 
-    private SensorFusionBosch getSensor() {
+    private SensorFusionBosch getSensor(MethodCall methodCall) {
         if (this.sensor == null) {
             this.sensor = board.getModule(SensorFusionBosch.class);
+
+            SensorFusionBosch.Mode mode = methodCall.argument("mode") == "IMU_PLUS" ? SensorFusionBosch.Mode.IMU_PLUS
+                    : methodCall.argument("mode") == "COMPASS" ? SensorFusionBosch.Mode.COMPASS
+                            : methodCall.argument("mode") == "M4G" ? SensorFusionBosch.Mode.M4G
+                                    : methodCall.argument("mode") == "NDOF" ? SensorFusionBosch.Mode.NDOF
+                                            : methodCall.argument("mode") == "SLEEP" ? SensorFusionBosch.Mode.SLEEP
+                                                    : SensorFusionBosch.Mode.NDOF;
+            SensorFusionBosch.AccRange accRange = methodCall.argument("accRange") == "AR_16G" ? SensorFusionBosch.AccRange.AR_16G
+                    : methodCall.argument("accRange") == "AR_8G" ? SensorFusionBosch.AccRange.AR_8G
+                            : methodCall.argument("accRange") == "AR_4G" ? SensorFusionBosch.AccRange.AR_4G
+                                    : methodCall.argument("accRange") == "AR_2G" ? SensorFusionBosch.AccRange.AR_2G
+                                            : SensorFusionBosch.AccRange.AR_16G;
+            SensorFusionBosch.GyroRange gyroRange = methodCall.argument("gyroRange") == "GR_2000DPS"
+                    ? SensorFusionBosch.GyroRange.GR_2000DPS
+                    : methodCall.argument("gyroRange") == "GR_1000DPS" ? SensorFusionBosch.GyroRange.GR_1000DPS
+                            : methodCall.argument("gyroRange") == "GR_500DPS" ? SensorFusionBosch.GyroRange.GR_500DPS
+                                    : methodCall.argument("gyroRange") == "GR_250DPS" ? SensorFusionBosch.GyroRange.GR_250DPS
+                                            : SensorFusionBosch.GyroRange.GR_2000DPS;
+
             this.sensor.configure()
-                    .mode(SensorFusionBosch.Mode.NDOF)
-                    .accRange(SensorFusionBosch.AccRange.AR_16G)
-                    .gyroRange(SensorFusionBosch.GyroRange.GR_2000DPS)
+                    .mode(mode)
+                    .accRange(accRange)
+                    .gyroRange(gyroRange)
                     .commit();
         }
         return this.sensor;
@@ -109,19 +128,27 @@ public class MetawearBoardChannel implements MethodChannel.MethodCallHandler {
                         result.success(new HashMap<String, Object>() {
                             {
                                 put("manufacturer", deviceInformation.manufacturer);
-                                put("model_number", deviceInformation.modelNumber);
-                                put("serial_number", deviceInformation.serialNumber);
-                                put("firmware_revision", deviceInformation.firmwareRevision);
-                                put("hardware_revision", deviceInformation.hardwareRevision);
+                                put("modelNumber", deviceInformation.modelNumber);
+                                put("serialNumber", deviceInformation.serialNumber);
+                                put("firmwareRevision", deviceInformation.firmwareRevision);
+                                put("hardwareRevision", deviceInformation.hardwareRevision);
                             }
                         });
                         return null;
                     }
                 });
                 break;
+            case "battery":
+                board.readBatteryLevelAsync().continueWith(new Continuation<Byte, Object>() {
+                    @Override
+                    public Object then(Task<Byte> task) throws Exception {
+                        result.success(task.getResult());
+                        return null;
+                    }
+                });
+                break;
             case "startCorrectedAcceleration":
-                // sensor.resetOrientation();
-                SensorFusionBosch s = this.getSensor();
+                SensorFusionBosch s = this.getSensor(methodCall);
                 s.correctedAcceleration()
                         .addRouteAsync(source1 -> source1.stream((data, env) -> {
                             this.activity.runOnUiThread(new Runnable() {
@@ -150,9 +177,8 @@ public class MetawearBoardChannel implements MethodChannel.MethodCallHandler {
                 s.start();
                 result.success(true);
                 break;
-             case "startCorrectedAngularVelocity":
-                s = this.getSensor();
-                // sensor.resetOrientation();
+            case "startCorrectedAngularVelocity":
+                s = this.getSensor(methodCall);
                 s.correctedAngularVelocity()
                         .addRouteAsync(source1 -> source1.stream((data, env) -> {
 
@@ -182,14 +208,8 @@ public class MetawearBoardChannel implements MethodChannel.MethodCallHandler {
                 s.start();
                 result.success(true);
                 break;
-             case "startCorrectedMagneticField":
-                s = this.getSensor();
-                sensor.configure()
-                        .mode(SensorFusionBosch.Mode.NDOF)
-                        .accRange(SensorFusionBosch.AccRange.AR_16G)
-                        .gyroRange(SensorFusionBosch.GyroRange.GR_2000DPS)
-                        .commit();
-                // sensor.resetOrientation();
+            case "startCorrectedMagneticField":
+                s = this.getSensor(methodCall);
                 sensor.correctedMagneticField()
                         .addRouteAsync(source1 -> source1.stream((data, env) -> {
 
@@ -220,8 +240,7 @@ public class MetawearBoardChannel implements MethodChannel.MethodCallHandler {
                 result.success(true);
                 break;
             case "startQuaternion":
-                // sensor.resetOrientation();
-                s = this.getSensor();
+                s = this.getSensor(methodCall);
                 s.quaternion()
                         .addRouteAsync(source1 -> source1.stream((data, env) -> {
 
@@ -253,9 +272,9 @@ public class MetawearBoardChannel implements MethodChannel.MethodCallHandler {
                 s.start();
                 result.success(true);
                 break;
-          case "stop":
-                s = this.getSensor();
-                s.correctedAcceleration().stop();                
+            case "stop":
+                s = this.getSensor(methodCall);
+                s.correctedAcceleration().stop();
                 s.correctedAngularVelocity().stop();
                 s.correctedMagneticField().stop();
                 s.quaternion().stop();

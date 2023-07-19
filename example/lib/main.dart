@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:metawear/boards/metamotionrl_board.dart';
 import 'package:metawear/metawear.dart';
+import 'package:metawear/modules/modules.dart';
 
 void main() {
   runApp(const MyApp());
@@ -99,24 +100,38 @@ class _MyAppState extends State<MyApp> {
             ElevatedButton(onPressed: _connect, child: Text('Connect')),
             ElevatedButton(onPressed: _disconnect, child: Text('Disconnect')),
             ElevatedButton(
-                onPressed: () {
-                  board?.deviceInfo().then((value) {
-                    print('Device info: $value');
-                  });
-                },
-                child: Text('Device info')),
+              onPressed: () {
+                board?.deviceInfo().then((value) {
+                  print('Device info: $value');
+                });
+              },
+              child: Text('Device info'),
+            ),
             ElevatedButton(
-                onPressed: () {
-                  board?.model().then((value) {
-                    print('Model: $value');
-                  });
-                },
-                child: Text('Device model')),
+              onPressed: () {
+                board?.model().then((value) {
+                  print('Model: $value');
+                });
+              },
+              child: Text('Device model'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                board?.battery().then((value) {
+                  print('Battery: $value');
+                });
+              },
+              child: Text('Battery'),
+            ),
             ..._feature(
               label: 'Acceleration',
               stream: board?.sensorFusionBoschModule.correctedAcceleration,
               start: () {
-                board?.sensorFusionBoschModule.startCorrectedAcceleration();
+                board?.sensorFusionBoschModule.startCorrectedAcceleration(
+                  mode: SensorFusionBoschMode.NDOF,
+                  accRange: SensorFusionBoschAccRange.AR_16G,
+                  gyroRange: SensorFusionBoschGyroRange.GR_2000DPS,
+                );
               },
               stop: () {
                 board?.sensorFusionBoschModule.stop();
@@ -126,7 +141,11 @@ class _MyAppState extends State<MyApp> {
               label: 'Angular Velocity',
               stream: board?.sensorFusionBoschModule.correctedAngularVelocity,
               start: () {
-                board?.sensorFusionBoschModule.startCorrectedAngularVelocity();
+                board?.sensorFusionBoschModule.startCorrectedAngularVelocity(
+                  mode: SensorFusionBoschMode.NDOF,
+                  accRange: SensorFusionBoschAccRange.AR_16G,
+                  gyroRange: SensorFusionBoschGyroRange.GR_2000DPS,
+                );
               },
               stop: () {
                 board?.sensorFusionBoschModule.stop();
@@ -136,7 +155,11 @@ class _MyAppState extends State<MyApp> {
               label: 'Magnetic Field',
               stream: board?.sensorFusionBoschModule.correctedMagneticField,
               start: () {
-                board?.sensorFusionBoschModule.startCorrectedMagneticField();
+                board?.sensorFusionBoschModule.startCorrectedMagneticField(
+                  mode: SensorFusionBoschMode.NDOF,
+                  accRange: SensorFusionBoschAccRange.AR_16G,
+                  gyroRange: SensorFusionBoschGyroRange.GR_2000DPS,
+                );
               },
               stop: () {
                 board?.sensorFusionBoschModule.stop();
