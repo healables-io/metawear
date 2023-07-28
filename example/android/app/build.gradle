@@ -26,7 +26,7 @@ apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
-    namespace "ai.healables.metawear_example"
+    namespace "ai.healables.metawear_dart.metawear_dart_example"
     compileSdkVersion flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
 
@@ -37,10 +37,10 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId "ai.healables.metawear_example"
+        applicationId "ai.healables.metawear_dart.metawear_dart_example"
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
-        minSdkVersion 30
+        minSdkVersion 30 
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
@@ -57,8 +57,4 @@ android {
 
 flutter {
     source '../..'
-}
-
-dependencies {
-    implementation 'com.mbientlab:metawear:4.0.0'
 }

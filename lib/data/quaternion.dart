@@ -21,7 +21,7 @@
  * Should you have any questions regarding your right to use this Software, contact MbientLab via email:
  * hello@mbientlab.com.
  */
-import 'package:metawear/boards/boards.dart';
+import 'package:metawear_dart/boards/boards.dart';
 import 'package:sprintf/sprintf.dart';
 
 /// Encapsulates a quaternion in the form q = w + x<b>i</b> + y<b>j</b> + z<b>k</b>

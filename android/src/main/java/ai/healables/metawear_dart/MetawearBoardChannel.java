@@ -1,4 +1,4 @@
-package ai.healables.metawear;
+package ai.healables.metawear_dart;
 
 import android.app.Activity;
 
@@ -31,7 +31,7 @@ public class MetawearBoardChannel implements MethodChannel.MethodCallHandler {
     private SensorFusionBosch sensor;
 
     public String getRootNamespace() {
-        return MetawearPlugin.NAMESPACE + "/metawear/" + board.getMacAddress();
+        return MetawearDartPlugin.NAMESPACE + "/metawear/" + board.getMacAddress();
     }
 
     public MetaWearBoard getBoard() {
@@ -86,7 +86,7 @@ public class MetawearBoardChannel implements MethodChannel.MethodCallHandler {
         deviceChannel.setMethodCallHandler(this);
         Log.d("Channel: ", getRootNamespace() + " :onCorrectedAcceleration");
 
-        Log.d(MetawearPlugin.TAG, "Device channel created: " + getRootNamespace());
+        Log.d(MetawearDartPlugin.TAG, "Device channel created: " + getRootNamespace());
         // moduleChannel = new MethodChannel(registrar.messenger(), getRootNamespace() +
         // "/modules");
         // moduleChannel.setMethodCallHandler(new MetawearModuleChannel(registrar,
@@ -102,11 +102,11 @@ public class MetawearBoardChannel implements MethodChannel.MethodCallHandler {
     @Override
     public void onMethodCall(final MethodCall methodCall, final MethodChannel.Result result) {
         final MetawearBoardChannel metawearChannel = this;
-        Log.d(MetawearPlugin.TAG, "onMethodCall: " + methodCall.method + " " + methodCall.arguments);
+        Log.d(MetawearDartPlugin.TAG, "onMethodCall: " + methodCall.method + " " + methodCall.arguments);
 
         switch (methodCall.method) {
             case "disconnect": {
-                Log.d(MetawearPlugin.TAG, "disconnect");
+                Log.d(MetawearDartPlugin.TAG, "disconnect");
                 board.disconnectAsync().continueWith(new Continuation<Void, Object>() {
                     @Override
                     public Object then(Task<Void> task) throws Exception {

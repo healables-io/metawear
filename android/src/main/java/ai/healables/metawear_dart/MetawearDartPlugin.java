@@ -1,4 +1,4 @@
-package ai.healables.metawear;
+package ai.healables.metawear_dart;
 
 import androidx.annotation.NonNull;
 import android.content.ServiceConnection;
@@ -27,8 +27,8 @@ import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.common.BinaryMessenger;
 
-/** MetawearPlugin */
-public class MetawearPlugin
+/** MetawearDartPlugin */
+public class MetawearDartPlugin
     implements FlutterPlugin, MethodCallHandler, ServiceConnection, ActivityAware {
 
   private MethodChannel channel;
@@ -41,8 +41,8 @@ public class MetawearPlugin
   private BluetoothAdapter bluetoothAdapter;
   private BinaryMessenger messenger;
 
-  public static final String TAG = "MetawearPlugin";
-  public static final String NAMESPACE = "ai.healables.metawear";
+  public static final String TAG = "MetawearDartPlugin";
+  public static final String NAMESPACE = "ai.healables.metawear_dart";
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {

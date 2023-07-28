@@ -1,12 +1,13 @@
 export 'boards/boards.dart';
 export 'data/data.dart';
 
-import 'package:metawear/boards/metamotionrl_board.dart';
+import 'package:metawear_dart/boards/metamotionrl_board.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'metawear_platform_interface.dart';
 
-const String channelNamespace = 'ai.healables.metawear';
+const String channelNamespace = 'ai.healables.metawear_dart';
+const String scanEventChannelName = '$channelNamespace/scan';
 
 class Metawear {
   Future<bool> requestPermissions() async {
@@ -23,5 +24,9 @@ class Metawear {
 
   Future<MetamotionRLBoard> connect(String mac, {bool? retry}) {
     return MetawearPlatform.instance.connect(mac, retry: retry);
+  }
+
+  Stream<MetamotionRLBoard> startScan() {
+    return MetawearPlatform.instance.startScan();
   }
 }

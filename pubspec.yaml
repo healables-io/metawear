@@ -1,11 +1,12 @@
-name: metawear
+name: metawear_dart
 description: A new Flutter plugin project.
 version: 0.0.1
-homepage: healables.io
+homepage:
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
   flutter: ">=3.3.0"
+
 
 dependencies:
   flutter:
@@ -38,10 +39,10 @@ flutter:
   plugin:
     platforms:
       android:
-        package: ai.healables.metawear
-        pluginClass: MetawearPlugin
+        package: ai.healables.metawear_dart
+        pluginClass: MetawearDartPlugin
       ios:
-        pluginClass: MetawearPlugin
+        pluginClass: MetawearDartPlugin
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:

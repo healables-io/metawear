@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:metawear/boards/boards.dart';
-import 'package:metawear/data/angular_velocity.dart';
-import 'package:metawear/data/magnetic_field.dart';
-import 'package:metawear/data/quaternion.dart';
+import 'package:metawear_dart/boards/boards.dart';
+import 'package:metawear_dart/data/angular_velocity.dart';
+import 'package:metawear_dart/data/magnetic_field.dart';
+import 'package:metawear_dart/data/quaternion.dart';
 
 enum SensorFusionBoschMode {
   SLEEP,

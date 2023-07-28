@@ -1,4 +1,4 @@
-package ai.healables.metawear;
+package ai.healables.metawear_dart.metawear_dart;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -15,10 +15,10 @@ import org.junit.Test;
  * you can run them directly from IDEs that support JUnit such as Android Studio.
  */
 
-public class MetawearPluginTest {
+public class MetawearDartPluginTest {
   @Test
   public void onMethodCall_getPlatformVersion_returnsExpectedValue() {
-    MetawearPlugin plugin = new MetawearPlugin();
+    MetawearDartPlugin plugin = new MetawearDartPlugin();
 
     final MethodCall call = new MethodCall("getPlatformVersion", null);
     MethodChannel.Result mockResult = mock(MethodChannel.Result.class);

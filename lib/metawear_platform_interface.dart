@@ -1,4 +1,4 @@
-import 'package:metawear/boards/metamotionrl_board.dart';
+import 'package:metawear_dart/boards/metamotionrl_board.dart';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'metawear_method_channel.dart';
@@ -25,6 +25,10 @@ abstract class MetawearPlatform extends PlatformInterface {
   }
 
   Future<MetamotionRLBoard> connect(String mac, {bool? retry}) {
+    throw UnimplementedError('platformVersion() has not been implemented.');
+  }
+
+  Stream<MetamotionRLBoard> startScan() {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
 }

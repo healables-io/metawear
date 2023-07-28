@@ -1,4 +1,4 @@
-package ai.healables.metawear_example;
+package ai.healables.metawear_dart.metawear_dart_example;
 
 import io.flutter.embedding.android.FlutterActivity;
 

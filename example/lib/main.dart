@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:metawear/boards/metamotionrl_board.dart';
-import 'package:metawear/metawear.dart';
-import 'package:metawear/modules/modules.dart';
+import 'package:metawear_dart/boards/metamotionrl_board.dart';
+import 'package:metawear_dart/metawear.dart';
+import 'package:metawear_dart/modules/modules.dart';
 
 void main() {
   runApp(const MyApp());
@@ -29,28 +29,40 @@ class _MyAppState extends State<MyApp> {
     super.initState();
   }
 
-  _connect() async {
+  _scan() async {
     try {
       await _metawearPlugin.requestPermissions();
-      print('Trying to connect to $macAddress');
-      MetamotionRLBoard b =
-          await _metawearPlugin.connect(macAddress, retry: true);
-      b.onDisconnected(() {
-        print('Disconnected from $macAddress');
+      print('Scanning for devices');
+      _metawearPlugin.startScan().listen((event) {
+        print('Found device: $event');
+        setState(() {
+          board = event;
+        });
       });
-      setState(() {
-        board = b;
-      });
-      print('Connected to $macAddress; board: $board');
     } catch (e) {
-      print('Failed to connect to $macAddress');
+      print('Failed to scan for devices: $e');
+    }
+  }
+
+  _connect() async {
+    try {
+      if (board == null) return;
+      await _metawearPlugin.requestPermissions();
+      print('Trying to connect to ${board!.id}');
+      await board!.connect();
+      board!.onDisconnected(() {
+        print('Disconnected from ${board?.id}');
+      });
+      setState(() {});
+      print('Connected to ${board?.id}; board: $board');
+    } catch (e) {
+      print('Failed to connect to ${board?.id}');
     }
   }
 
   _disconnect() async {
-    print('Disconnecting from $macAddress');
+    print('Disconnecting from ${board?.id}');
     board?.disconnect();
-    print('Disconnected from $macAddress');
   }
 
   _feature({
@@ -97,6 +109,7 @@ class _MyAppState extends State<MyApp> {
         ),
         body: Center(
           child: Column(children: [
+            ElevatedButton(onPressed: _scan, child: Text('Scan')),
             ElevatedButton(onPressed: _connect, child: Text('Connect')),
             ElevatedButton(onPressed: _disconnect, child: Text('Disconnect')),
             ElevatedButton(

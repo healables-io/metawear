@@ -22,7 +22,7 @@
  * hello@mbientlab.com.
  */
 
-import 'package:metawear/metawear.dart';
+import 'package:metawear_dart/metawear.dart';
 import 'package:sprintf/sprintf.dart';
 
 /// Encapsulates angular velocity data, values are in degrees per second

@@ -1,6 +1,6 @@
-# metawear_example
+# metawear_dart_example
 
-Demonstrates how to use the metawear plugin.
+Demonstrates how to use the metawear_dart plugin.
 
 ## Getting Started
 

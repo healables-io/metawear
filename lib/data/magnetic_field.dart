@@ -22,7 +22,7 @@
  * hello@mbientlab.com.
  */
 
-import 'package:metawear/boards/boards.dart';
+import 'package:metawear_dart/boards/boards.dart';
 import 'package:sprintf/sprintf.dart';
 
 /// Encapsulates magnetic field strength data, values are in micro tesla

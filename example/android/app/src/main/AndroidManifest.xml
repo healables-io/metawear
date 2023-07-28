@@ -1,11 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    
     <application
-        android:label="metawear_example"
+        android:label="metawear_dart_example"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
-
-    <service android:name="com.mbientlab.metawear.android.BtleService" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

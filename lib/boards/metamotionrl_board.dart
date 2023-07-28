@@ -1,21 +1,38 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
-import 'package:metawear/boards/board.dart';
-import 'package:metawear/data/board_info.dart';
-import 'package:metawear/metawear.dart';
-import 'package:metawear/modules/modules.dart';
+import 'package:metawear_dart/boards/board.dart';
+import 'package:metawear_dart/data/board_info.dart';
+import 'package:metawear_dart/metawear.dart';
+import 'package:metawear_dart/modules/modules.dart';
 
 class MetamotionRLBoard implements MetawearBoard {
-  final String mac;
+  final String id;
+  final String name;
+  late String? mac;
 
   final MethodChannel _channel;
 
   late SensorFusionBoschModule sensorFusionBoschModule;
 
-  MetamotionRLBoard(this.mac)
-      : _channel = MethodChannel('$channelNamespace/metawear/$mac') {
+  MetamotionRLBoard({
+    required this.id,
+    required this.name,
+    required this.mac,
+  }) : _channel = MethodChannel('$channelNamespace/metawear/$id') {
+    if (!Platform.isIOS) {
+      mac = id;
+    } else {
+      mac = null;
+    }
+
     sensorFusionBoschModule = SensorFusionBoschModule(_channel);
+  }
+
+  @override
+  Future<void> connect() async {
+    await _channel.invokeMethod('connect');
   }
 
   @override
@@ -35,6 +52,11 @@ class MetamotionRLBoard implements MetawearBoard {
         callback();
       }
     });
+  }
+
+  @override
+  String toString() {
+    return 'MetamotionRLBoard{id: $id, name: $name, mac: $mac}';
   }
 
   Future<String?> model() {

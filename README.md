@@ -1,4 +1,4 @@
-# metawear
+# metawear_dart
 
 A new Flutter plugin project.
 
