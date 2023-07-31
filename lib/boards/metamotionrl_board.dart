@@ -13,6 +13,7 @@ class MetamotionRLBoard implements MetawearBoard {
   late String? mac;
 
   final MethodChannel _channel;
+  final EventChannel _stateChannel;
 
   late SensorFusionBoschModule sensorFusionBoschModule;
 
@@ -20,7 +21,8 @@ class MetamotionRLBoard implements MetawearBoard {
     required this.id,
     required this.name,
     required this.mac,
-  }) : _channel = MethodChannel('$channelNamespace/metawear/$id') {
+  })  : _channel = MethodChannel('$channelNamespace/metawear/$id'),
+        _stateChannel = EventChannel('$channelNamespace/metawear/$id/state') {
     if (!Platform.isIOS) {
       mac = id;
     } else {
@@ -32,6 +34,7 @@ class MetamotionRLBoard implements MetawearBoard {
 
   @override
   Future<void> connect() async {
+    print('Connecting to ${_channel.name}');
     await _channel.invokeMethod('connect');
   }
 
@@ -46,10 +49,11 @@ class MetamotionRLBoard implements MetawearBoard {
   }
 
   @override
-  void onDisconnected(void Function() callback) {
-    _channel.setMethodCallHandler((call) async {
-      if (call.method == 'onDisconnect') {
-        callback();
+  void onDisconnected(void Function(String? reason) callback) {
+    _stateChannel.receiveBroadcastStream().listen((call) async {
+      print('onDisconnected: $call');
+      if (!call['connected']) {
+        callback(call['reason']);
       }
     });
   }
@@ -59,11 +63,8 @@ class MetamotionRLBoard implements MetawearBoard {
     return 'MetamotionRLBoard{id: $id, name: $name, mac: $mac}';
   }
 
-  Future<String?> model() {
-    return _channel.invokeMethod('model');
-  }
-
-  Future<DeviceInfo> deviceInfo() async {
+  @override
+  Future<DeviceInfo> info() async {
     Map<String, String>? data =
         await _channel.invokeMapMethod<String, String>('deviceInfo');
 
@@ -74,17 +75,27 @@ class MetamotionRLBoard implements MetawearBoard {
     return DeviceInfo.fromMap(data);
   }
 
-  Future<DeviceModel> deviceModel() async {
+  @override
+  Future<DeviceModel> model() async {
     String? model = await _channel.invokeMethod('model');
 
     if (model == null) {
       throw Exception('Failed to get device model');
     }
 
+    if (int.tryParse(model) != null) {
+      return DeviceModel.unknown.fromId(int.parse(model));
+    }
+
     return DeviceModel.unknown.fromString(model);
   }
 
+  @override
   Future<int> battery() async {
-    return await _channel.invokeMethod<int>('battery') ?? -1;
+    if (Platform.isIOS) {
+      throw UnimplementedError();
+    }
+    int battery = await _channel.invokeMethod<int>('battery') ?? -1;
+    return battery;
   }
 }

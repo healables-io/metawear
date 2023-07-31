@@ -20,30 +20,13 @@ class MethodChannelMetawear extends MetawearPlatform {
         .receiveBroadcastStream()
         .map((data) => MetamotionRLBoard(
               id: data['id'],
-              name: data['name'],
-              mac: data['mac'],
+              name: data['name'] ?? '',
+              mac: data['mac'] ?? '',
             ));
   }
 
   @override
-  Future<MetamotionRLBoard> connect(String mac,
-      {bool? retry, int? retries = 3}) async {
-    final connected =
-        await methodChannel.invokeMethod<bool>('connect', {'mac': mac});
-    if (connected == true) {
-      return MetamotionRLBoard(
-        id: mac,
-        name: mac,
-        mac: mac,
-      );
-    } else {
-      if (retry == true && retries! > 0) {
-        return connect(mac, retry: retry, retries: retries - 1);
-      }
-      throw PlatformException(
-        code: 'CONNECT_FAILED',
-        message: 'Failed to connect to $mac',
-      );
-    }
+  Future<void> stopScan() async {
+    await methodChannel.invokeMethod('stopScan');
   }
 }

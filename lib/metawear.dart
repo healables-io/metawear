@@ -14,6 +14,7 @@ class Metawear {
     Map<Permission, PermissionStatus> statuses = await [
       Permission.location,
       Permission.bluetooth,
+      Permission.bluetoothScan,
       Permission.bluetoothConnect,
     ].request();
 
@@ -22,11 +23,11 @@ class Metawear {
         statuses[Permission.bluetoothConnect] == PermissionStatus.granted;
   }
 
-  Future<MetamotionRLBoard> connect(String mac, {bool? retry}) {
-    return MetawearPlatform.instance.connect(mac, retry: retry);
-  }
-
   Stream<MetamotionRLBoard> startScan() {
     return MetawearPlatform.instance.startScan();
+  }
+
+  Future<void> stopScan() {
+    return MetawearPlatform.instance.stopScan();
   }
 }

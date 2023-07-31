@@ -49,9 +49,10 @@ class _MyAppState extends State<MyApp> {
       if (board == null) return;
       await _metawearPlugin.requestPermissions();
       print('Trying to connect to ${board!.id}');
+      await _metawearPlugin.stopScan();
       await board!.connect();
-      board!.onDisconnected(() {
-        print('Disconnected from ${board?.id}');
+      board!.onDisconnected((reason) {
+        print('Disconnected from ${board?.id}: $reason');
       });
       setState(() {});
       print('Connected to ${board?.id}; board: $board');
@@ -110,11 +111,16 @@ class _MyAppState extends State<MyApp> {
         body: Center(
           child: Column(children: [
             ElevatedButton(onPressed: _scan, child: Text('Scan')),
+            ElevatedButton(
+                onPressed: () {
+                  _metawearPlugin.stopScan();
+                },
+                child: Text('Stop Scan')),
             ElevatedButton(onPressed: _connect, child: Text('Connect')),
             ElevatedButton(onPressed: _disconnect, child: Text('Disconnect')),
             ElevatedButton(
               onPressed: () {
-                board?.deviceInfo().then((value) {
+                board?.info().then((value) {
                   print('Device info: $value');
                 });
               },

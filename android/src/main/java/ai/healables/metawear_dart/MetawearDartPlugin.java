@@ -11,6 +11,10 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.os.IBinder;
 import android.util.Log;
+import java.util.ArrayList;
+import android.content.*;
+import java.util.HashMap;
+import java.util.UUID;
 
 import com.mbientlab.metawear.MetaWearBoard;
 import com.mbientlab.metawear.android.BtleService;
@@ -22,6 +26,7 @@ import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
 import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
+import io.flutter.plugin.common.EventChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
 import io.flutter.plugin.common.PluginRegistry;
@@ -32,6 +37,8 @@ public class MetawearDartPlugin
     implements FlutterPlugin, MethodCallHandler, ServiceConnection, ActivityAware {
 
   private MethodChannel channel;
+  private EventChannel scanEvents;
+  private StreamHandler scanEventsStreamHandler;
 
   private Context context;
   private Activity activity;
@@ -41,6 +48,9 @@ public class MetawearDartPlugin
   private BluetoothAdapter bluetoothAdapter;
   private BinaryMessenger messenger;
 
+  private ArrayList<MetawearBoardChannel> devices = new ArrayList<>();
+  private ArrayList<String> macAddresses = new ArrayList<>();
+
   public static final String TAG = "MetawearDartPlugin";
   public static final String NAMESPACE = "ai.healables.metawear_dart";
 
@@ -49,12 +59,18 @@ public class MetawearDartPlugin
     messenger = flutterPluginBinding.getBinaryMessenger();
     channel = new MethodChannel(messenger, NAMESPACE);
     channel.setMethodCallHandler(this);
+
+    scanEvents = new EventChannel(messenger, NAMESPACE + "/scan");
+    scanEventsStreamHandler = new StreamHandler(flutterPluginBinding.getApplicationContext());
+    scanEvents.setStreamHandler(scanEventsStreamHandler);
   }
 
   @Override
   public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
-    if (call.method.equals("connect")) {
-      onMethodCallConnect(call, result);
+    if (call.method.equals("startScan")) {
+      startScan(call, result);
+    } else if (call.method.equals("stopScan")) {
+      stopScan(call, result);
     } else {
       result.notImplemented();
     }
@@ -79,6 +95,7 @@ public class MetawearDartPlugin
   @Override
   public void onDetachedFromActivity() {
     activity = null;
+    context.unbindService(this);
   }
 
   @Override
@@ -102,27 +119,73 @@ public class MetawearDartPlugin
     activity = null;
   }
 
-  public void onMethodCallConnect(@NonNull MethodCall methodCall, @NonNull Result result) {
-    final String mac = (String) methodCall.argument("mac");
-    BluetoothDevice device = bluetoothAdapter.getRemoteDevice(mac);
-    final MetaWearBoard board = serviceBinder.getMetaWearBoard(device);
-    board.connectAsync().continueWith(new Continuation<Void, Object>() {
-      @Override
-      public Object then(Task<Void> task) throws Exception {
-        if (task.isFaulted()) {
-          Log.d(TAG, "cannot connect");
-          result.success(false);
-        } else {
-          Log.d(TAG, "connected");
-          new MethodChannel(messenger, NAMESPACE + "/metawear/" +
-              board.getMacAddress())
-              .setMethodCallHandler(new MetawearBoardChannel(messenger, board, activity));
-          result.success(true);
-        }
-        return null;
-      }
-    });
+  public void startScan(@NonNull MethodCall methodCall, @NonNull Result result) {
 
+    if (bluetoothAdapter == null) {
+      result.error("bluetooth_unavailable", "Bluetooth is not available", null);
+      return;
+    }
+
+    if (!bluetoothAdapter.isEnabled()) {
+      result.error("bluetooth_disabled", "Bluetooth is disabled", null);
+      return;
+    }
+
+    devices.clear();
+    macAddresses.clear();
+
+    bluetoothAdapter.startLeScan(
+        new UUID[] {
+            MetaWearBoard.METAWEAR_GATT_SERVICE,
+        },
+        scanCallback);
+    result.success(null);
   }
+
+  public void stopScan(@NonNull MethodCall methodCall, @NonNull Result result) {
+    bluetoothAdapter.stopLeScan(
+        scanCallback);
+    result.success(null);
+  }
+
+  private BluetoothAdapter.LeScanCallback scanCallback = new BluetoothAdapter.LeScanCallback() {
+
+    @Override
+    public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
+
+      Log.d(TAG, "onLeScan");
+      if (serviceBinder == null) {
+        Log.d(TAG, "serviceBinder is null");
+        return;
+      }
+
+      MetaWearBoard board = serviceBinder.getMetaWearBoard(device);
+      if (board == null) {
+        Log.d(TAG, "board is null");
+        return;
+      }
+
+      String macAddress = board.getMacAddress();
+
+      if (macAddresses.contains(macAddress)) {
+        return;
+      }
+
+      MetawearBoardChannel channel = new MetawearBoardChannel(messenger, board, activity, context);
+      devices.add(channel);
+      macAddresses.add(macAddress);
+
+      scanEventsStreamHandler.success(new HashMap<String, Object>() {
+        {
+          put("mac", macAddress);
+          put("id", macAddress);
+          // put("name", device.getName());
+          put("rssi", rssi);
+        }
+      });
+
+      return;
+    };
+  };
 
 }

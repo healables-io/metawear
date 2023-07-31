@@ -18,7 +18,16 @@ enum DeviceModel {
 extension DeviceModelExtension on DeviceModel {
   DeviceModel fromString(String name) {
     for (var model in DeviceModel.values) {
-      if (model.toString() == name) {
+      if (model.name == name) {
+        return model;
+      }
+    }
+    return DeviceModel.unknown;
+  }
+
+  DeviceModel fromId(int id) {
+    for (var model in DeviceModel.values) {
+      if (model.index + 1 == id) {
         return model;
       }
     }

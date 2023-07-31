@@ -24,11 +24,11 @@ abstract class MetawearPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<MetamotionRLBoard> connect(String mac, {bool? retry}) {
+  Stream<MetamotionRLBoard> startScan() {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
 
-  Stream<MetamotionRLBoard> startScan() {
+  Future<void> stopScan() {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
 }

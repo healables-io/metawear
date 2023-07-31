@@ -12,7 +12,7 @@ public class MetawearDartPlugin: NSObject, FlutterPlugin {
 
   private var scanEvents: EventChannelHandler?
 
-  public var items: [ScannerModelItem] = []
+  public var items: [MetawearBoardChannel] = []
 
   public override init() {
     super.init()
@@ -42,10 +42,6 @@ public class MetawearDartPlugin: NSObject, FlutterPlugin {
     case "stopScan":
       self.stopScan()
       result(nil)
-    case "connect":
-      // Connect to a device with the given MAC address
-      print("Connect()")
-      result(nil)
     default:
       result(FlutterMethodNotImplemented)
     }
@@ -57,24 +53,14 @@ public class MetawearDartPlugin: NSObject, FlutterPlugin {
     MetaWearScanner.shared.startScan(allowDuplicates: false) { (device) in
       print("Found device: \(device.name) \(device.mac) \(device.rssi)")
       do {
-        let channel = FlutterMethodChannel(
-          name: "\(NAMESPACE)/metawear/\(device.peripheral.identifier.uuidString)",
-          binaryMessenger: self.registrar!.messenger())
-        let item = ScannerModelItem(device, channel)
-
-        DispatchQueue.main.async {
-          channel.setMethodCallHandler(item.handle)
-        }
-
+        let item = MetawearBoardChannel(device, self.registrar!)
         self.items.append(item)
         var args = [String: String?]()
         args["id"] = device.peripheral.identifier.uuidString
         args["name"] = device.name
         args["mac"] = device.mac
-        try self.scanEvents?.success(
-          event:
-            args
-        )
+        args["rssi"] = String(device.rssi)
+        try self.scanEvents?.success(event: args)
       } catch {
         print("Error: \(error.localizedDescription)")
         self.scanEvents?.error(code: "scanFailure", message: error.localizedDescription)

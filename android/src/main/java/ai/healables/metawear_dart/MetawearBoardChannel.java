@@ -1,6 +1,7 @@
 package ai.healables.metawear_dart;
 
 import android.app.Activity;
+import android.content.Context;
 
 import com.mbientlab.metawear.DeviceInformation;
 import com.mbientlab.metawear.MetaWearBoard;
@@ -19,24 +20,18 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.PluginRegistry;
 import io.flutter.plugin.common.BinaryMessenger;
+import io.flutter.plugin.common.EventChannel;
 import android.util.Log;
 
 public class MetawearBoardChannel implements MethodChannel.MethodCallHandler {
     private final BinaryMessenger messenger;
     private final MetaWearBoard board;
     private final Activity activity;
-    // private final MethodChannel moduleChannel;
+
     private final MethodChannel deviceChannel;
+    private final StreamHandler stateHandler;
 
     private SensorFusionBosch sensor;
-
-    public String getRootNamespace() {
-        return MetawearDartPlugin.NAMESPACE + "/metawear/" + board.getMacAddress();
-    }
-
-    public MetaWearBoard getBoard() {
-        return board;
-    }
 
     private SensorFusionBosch getSensor(MethodCall methodCall) {
         if (this.sensor == null) {
@@ -48,7 +43,8 @@ public class MetawearBoardChannel implements MethodChannel.MethodCallHandler {
                                     : methodCall.argument("mode") == "NDOF" ? SensorFusionBosch.Mode.NDOF
                                             : methodCall.argument("mode") == "SLEEP" ? SensorFusionBosch.Mode.SLEEP
                                                     : SensorFusionBosch.Mode.NDOF;
-            SensorFusionBosch.AccRange accRange = methodCall.argument("accRange") == "AR_16G" ? SensorFusionBosch.AccRange.AR_16G
+            SensorFusionBosch.AccRange accRange = methodCall.argument("accRange") == "AR_16G"
+                    ? SensorFusionBosch.AccRange.AR_16G
                     : methodCall.argument("accRange") == "AR_8G" ? SensorFusionBosch.AccRange.AR_8G
                             : methodCall.argument("accRange") == "AR_4G" ? SensorFusionBosch.AccRange.AR_4G
                                     : methodCall.argument("accRange") == "AR_2G" ? SensorFusionBosch.AccRange.AR_2G
@@ -57,7 +53,8 @@ public class MetawearBoardChannel implements MethodChannel.MethodCallHandler {
                     ? SensorFusionBosch.GyroRange.GR_2000DPS
                     : methodCall.argument("gyroRange") == "GR_1000DPS" ? SensorFusionBosch.GyroRange.GR_1000DPS
                             : methodCall.argument("gyroRange") == "GR_500DPS" ? SensorFusionBosch.GyroRange.GR_500DPS
-                                    : methodCall.argument("gyroRange") == "GR_250DPS" ? SensorFusionBosch.GyroRange.GR_250DPS
+                                    : methodCall.argument("gyroRange") == "GR_250DPS"
+                                            ? SensorFusionBosch.GyroRange.GR_250DPS
                                             : SensorFusionBosch.GyroRange.GR_2000DPS;
 
             this.sensor.configure()
@@ -69,7 +66,11 @@ public class MetawearBoardChannel implements MethodChannel.MethodCallHandler {
         return this.sensor;
     }
 
-    public MetawearBoardChannel(final BinaryMessenger messenger, final MetaWearBoard board, final Activity activity) {
+    public MetawearBoardChannel(
+            final BinaryMessenger messenger,
+            final MetaWearBoard board,
+            final Activity activity,
+            final Context context) {
         this.messenger = messenger;
         this.board = board;
         this.activity = activity;
@@ -77,20 +78,32 @@ public class MetawearBoardChannel implements MethodChannel.MethodCallHandler {
         board.onUnexpectedDisconnect(new MetaWearBoard.UnexpectedDisconnectHandler() {
             @Override
             public void disconnected(int status) {
-                deviceChannel.invokeMethod("onDisconnect", null);
+                stateHandler.success(
+                        new HashMap<String, Object>() {
+                            {
+                                put("connected", false);
+                                put("reason", "disconnected");
+                            }
+                        });
                 clearHandlers();
             }
         });
 
         deviceChannel = new MethodChannel(messenger, getRootNamespace());
         deviceChannel.setMethodCallHandler(this);
-        Log.d("Channel: ", getRootNamespace() + " :onCorrectedAcceleration");
 
-        Log.d(MetawearDartPlugin.TAG, "Device channel created: " + getRootNamespace());
-        // moduleChannel = new MethodChannel(registrar.messenger(), getRootNamespace() +
-        // "/modules");
-        // moduleChannel.setMethodCallHandler(new MetawearModuleChannel(registrar,
-        // this));
+        Log.d(MetawearDartPlugin.TAG, "MetawearBoardChannel: " + getRootNamespace());
+
+        stateHandler = new StreamHandler(context);
+        new EventChannel(messenger, getRootNamespace() + "/state").setStreamHandler(stateHandler);
+    }
+
+    public String getRootNamespace() {
+        return MetawearDartPlugin.NAMESPACE + "/metawear/" + board.getMacAddress();
+    }
+
+    public MetaWearBoard getBoard() {
+        return board;
     }
 
     private void clearHandlers() {
@@ -105,6 +118,27 @@ public class MetawearBoardChannel implements MethodChannel.MethodCallHandler {
         Log.d(MetawearDartPlugin.TAG, "onMethodCall: " + methodCall.method + " " + methodCall.arguments);
 
         switch (methodCall.method) {
+            case "connect": {
+                Log.d(MetawearDartPlugin.TAG, "connect");
+                board.connectAsync().continueWith(new Continuation<Void, Object>() {
+                    @Override
+                    public Object then(Task<Void> task) throws Exception {
+                        if (task.isFaulted()) {
+                            result.error("connect", task.getError().getMessage(), null);
+                        } else {
+                            stateHandler.success(
+                                    new HashMap<String, Object>() {
+                                        {
+                                            put("connected", true);
+                                        }
+                                    });
+                            result.success(true);
+                        }
+                        return null;
+                    }
+                });
+            }
+                break;
             case "disconnect": {
                 Log.d(MetawearDartPlugin.TAG, "disconnect");
                 board.disconnectAsync().continueWith(new Continuation<Void, Object>() {
