@@ -29,7 +29,7 @@ import 'package:sprintf/sprintf.dart';
 /// @author Eric Tsai
 class AngularVelocity extends FloatVector {
   /// Degrees per second
-  static const String DEGS_PER_SEC = "\u00B0/s";
+  static const String degreesPerSecond = "\u00B0/s";
 
   AngularVelocity(double x, double y, double z) : super(x, y, z);
 
@@ -54,6 +54,6 @@ class AngularVelocity extends FloatVector {
   @override
   String toString() {
     return sprintf("{x: %.3f%s, y: %.3f%s, z: %.3f%s}",
-        [x(), DEGS_PER_SEC, y(), DEGS_PER_SEC, z(), DEGS_PER_SEC]);
+        [x(), degreesPerSecond, y(), degreesPerSecond, z(), degreesPerSecond]);
   }
 }

@@ -1,12 +1,11 @@
 name: metawear_dart
-description: A new Flutter plugin project.
+description: Plugin to connect to MetaWear devices
 version: 0.0.1
-homepage:
+homepage: https://github.com/healables-io/metawear_dart
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ">=3.0.0 <4.0.0"
   flutter: ">=3.3.0"
-
 
 dependencies:
   flutter:

@@ -34,7 +34,6 @@ class MetamotionRLBoard implements MetawearBoard {
 
   @override
   Future<void> connect() async {
-    print('Connecting to ${_channel.name}');
     await _channel.invokeMethod('connect');
   }
 
@@ -51,7 +50,6 @@ class MetamotionRLBoard implements MetawearBoard {
   @override
   void onDisconnected(void Function(String? reason) callback) {
     _stateChannel.receiveBroadcastStream().listen((call) async {
-      print('onDisconnected: $call');
       if (!call['connected']) {
         callback(call['reason']);
       }
