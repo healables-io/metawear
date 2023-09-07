@@ -174,7 +174,10 @@ public class MetawearDartPlugin
       MetawearBoardChannel channel = new MetawearBoardChannel(messenger, board, activity, context);
       devices.add(channel);
       macAddresses.add(macAddress);
-
+      if (scanEventsStreamHandler == null) {
+        Log.d(TAG, "scanEventsStreamHandler is null");
+        scanEventsStreamHandler = new StreamHandler(context);
+      }
       scanEventsStreamHandler.success(new HashMap<String, Object>() {
         {
           put("mac", macAddress);
