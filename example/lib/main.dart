@@ -142,6 +142,11 @@ class _MyAppState extends State<MyApp> {
               },
               child: Text('Battery'),
             ),
+            if (board != null)
+              StreamBuilder(
+                stream: board!.state,
+                builder: (context, snapshot) => Text('State: ${snapshot.data}'),
+              ),
             ..._feature(
               label: 'Acceleration',
               stream: board?.sensorFusionBoschModule.correctedAcceleration,

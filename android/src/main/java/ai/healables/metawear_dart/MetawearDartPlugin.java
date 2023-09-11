@@ -152,8 +152,6 @@ public class MetawearDartPlugin
 
     @Override
     public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-
-      Log.d(TAG, "onLeScan");
       if (serviceBinder == null) {
         Log.d(TAG, "serviceBinder is null");
         return;

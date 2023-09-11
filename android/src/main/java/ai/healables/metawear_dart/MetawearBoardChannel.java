@@ -96,6 +96,13 @@ public class MetawearBoardChannel implements MethodChannel.MethodCallHandler {
 
         stateHandler = new StreamHandler(context);
         new EventChannel(messenger, getRootNamespace() + "/state").setStreamHandler(stateHandler);
+
+        stateHandler.success(
+                new HashMap<String, Object>() {
+                    {
+                        put("connected", false);
+                    }
+                });
     }
 
     public String getRootNamespace() {
@@ -120,32 +127,57 @@ public class MetawearBoardChannel implements MethodChannel.MethodCallHandler {
         switch (methodCall.method) {
             case "connect": {
                 Log.d(MetawearDartPlugin.TAG, "connect");
+                Activity activity = this.activity;
                 board.connectAsync().continueWith(new Continuation<Void, Object>() {
                     @Override
                     public Object then(Task<Void> task) throws Exception {
-                        if (task.isFaulted()) {
-                            result.error("connect", task.getError().getMessage(), null);
-                        } else {
-                            stateHandler.success(
-                                    new HashMap<String, Object>() {
-                                        {
-                                            put("connected", true);
-                                        }
-                                    });
-                            result.success(true);
-                        }
+                        activity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Log.d(MetawearDartPlugin.TAG, "connect then");
+                                if (task.isFaulted()) {
+                                    Log.d(MetawearDartPlugin.TAG, "connect error: " + task.getError().getMessage());
+                                    result.error("connect", task.getError().getMessage(), null);
+
+                                } else {
+                                    Log.d(MetawearDartPlugin.TAG, "connect success");
+                                    stateHandler.success(
+                                            new HashMap<String, Object>() {
+                                                {
+                                                    put("connected", true);
+                                                }
+                                            });
+                                    result.success(true);
+                                }
+                            }
+                        });
                         return null;
                     }
                 });
+
             }
                 break;
             case "disconnect": {
                 Log.d(MetawearDartPlugin.TAG, "disconnect");
+                Activity activity = this.activity;
                 board.disconnectAsync().continueWith(new Continuation<Void, Object>() {
+
                     @Override
                     public Object then(Task<Void> task) throws Exception {
-                        result.success(true);
-                        clearHandlers();
+                        activity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                stateHandler.success(
+                                        new HashMap<String, Object>() {
+                                            {
+                                                put("connected", false);
+                                                put("reason", "disconnected");
+                                            }
+                                        });
+                                result.success(true);
+                                clearHandlers();
+                            }
+                        });
                         return null;
                     }
                 });
@@ -156,6 +188,7 @@ public class MetawearBoardChannel implements MethodChannel.MethodCallHandler {
                 break;
             case "deviceInfo":
                 board.readDeviceInformationAsync().continueWith(new Continuation<DeviceInformation, Object>() {
+
                     @Override
                     public Object then(Task<DeviceInformation> task) throws Exception {
                         final DeviceInformation deviceInformation = task.getResult();
@@ -174,6 +207,7 @@ public class MetawearBoardChannel implements MethodChannel.MethodCallHandler {
                 break;
             case "battery":
                 board.readBatteryLevelAsync().continueWith(new Continuation<Byte, Object>() {
+
                     @Override
                     public Object then(Task<Byte> task) throws Exception {
                         result.success(task.getResult());
@@ -182,126 +216,120 @@ public class MetawearBoardChannel implements MethodChannel.MethodCallHandler {
                 });
                 break;
             case "startCorrectedAcceleration":
-                SensorFusionBosch s = this.getSensor(methodCall);
-                s.correctedAcceleration()
-                        .addRouteAsync(source1 -> source1.stream((data, env) -> {
-                            this.activity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    float x = data.value(SensorFusionBosch.CorrectedAcceleration.class).x();
-                                    float y = data.value(SensorFusionBosch.CorrectedAcceleration.class).y();
-                                    float z = data.value(SensorFusionBosch.CorrectedAcceleration.class).z();
-                                    long time = data.timestamp().getTimeInMillis();
-                                    deviceChannel.invokeMethod("onCorrectedAcceleration",
-                                            new HashMap<String, Object>() {
-                                                {
-                                                    put("x", x);
-                                                    put("y", y);
-                                                    put("z", z);
-                                                    put("time", time);
-                                                }
 
-                                            ;
-                                            });
-
+                SensorFusionBosch s = this.getSensor(
+                        methodCall);
+                s.correctedAcceleration().addRouteAsync(source1 -> source1.stream((data, env) -> {
+                    this.activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            float x = data.value(SensorFusionBosch.CorrectedAcceleration.class).x();
+                            float y = data.value(SensorFusionBosch.CorrectedAcceleration.class).y();
+                            float z = data.value(SensorFusionBosch.CorrectedAcceleration.class).z();
+                            long time = data.timestamp().getTimeInMillis();
+                            deviceChannel.invokeMethod("onCorrectedAcceleration", new HashMap<String, Object>() {
+                                {
+                                    put("x", x);
+                                    put("y", y);
+                                    put("z", z);
+                                    put("time", time);
                                 }
+
+                                ;
                             });
-                        }));
+
+                        }
+                    });
+                }));
                 s.correctedAcceleration().start();
                 s.start();
                 result.success(true);
                 break;
             case "startCorrectedAngularVelocity":
                 s = this.getSensor(methodCall);
-                s.correctedAngularVelocity()
-                        .addRouteAsync(source1 -> source1.stream((data, env) -> {
+                s.correctedAngularVelocity().addRouteAsync(source1 -> source1.stream((data, env) -> {
 
-                            this.activity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    float x = data.value(SensorFusionBosch.CorrectedAngularVelocity.class).x();
-                                    float y = data.value(SensorFusionBosch.CorrectedAngularVelocity.class).y();
-                                    float z = data.value(SensorFusionBosch.CorrectedAngularVelocity.class).z();
-                                    long time = data.timestamp().getTimeInMillis();
-                                    deviceChannel.invokeMethod("onCorrectedAngularVelocity",
-                                            new HashMap<String, Object>() {
-                                                {
-                                                    put("x", x);
-                                                    put("y", y);
-                                                    put("z", z);
-                                                    put("time", time);
-                                                }
-
-                                            ;
-                                            });
-
+                    this.activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            float x = data.value(SensorFusionBosch.CorrectedAngularVelocity.class).x();
+                            float y = data.value(SensorFusionBosch.CorrectedAngularVelocity.class).y();
+                            float z = data.value(SensorFusionBosch.CorrectedAngularVelocity.class).z();
+                            long time = data.timestamp().getTimeInMillis();
+                            deviceChannel.invokeMethod("onCorrectedAngularVelocity", new HashMap<String, Object>() {
+                                {
+                                    put("x", x);
+                                    put("y", y);
+                                    put("z", z);
+                                    put("time", time);
                                 }
+
+                                ;
                             });
-                        }));
+
+                        }
+                    });
+                }));
                 s.correctedAngularVelocity().start();
                 s.start();
                 result.success(true);
                 break;
             case "startCorrectedMagneticField":
                 s = this.getSensor(methodCall);
-                sensor.correctedMagneticField()
-                        .addRouteAsync(source1 -> source1.stream((data, env) -> {
+                sensor.correctedMagneticField().addRouteAsync(source1 -> source1.stream((data, env) -> {
 
-                            this.activity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    float x = data.value(SensorFusionBosch.CorrectedMagneticField.class).x();
-                                    float y = data.value(SensorFusionBosch.CorrectedMagneticField.class).y();
-                                    float z = data.value(SensorFusionBosch.CorrectedMagneticField.class).z();
-                                    long time = data.timestamp().getTimeInMillis();
-                                    deviceChannel.invokeMethod("onCorrectedMagneticField",
-                                            new HashMap<String, Object>() {
-                                                {
-                                                    put("x", x);
-                                                    put("y", y);
-                                                    put("z", z);
-                                                    put("time", time);
-                                                }
-
-                                            ;
-                                            });
-
+                    this.activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            float x = data.value(SensorFusionBosch.CorrectedMagneticField.class).x();
+                            float y = data.value(SensorFusionBosch.CorrectedMagneticField.class).y();
+                            float z = data.value(SensorFusionBosch.CorrectedMagneticField.class).z();
+                            long time = data.timestamp().getTimeInMillis();
+                            deviceChannel.invokeMethod("onCorrectedMagneticField", new HashMap<String, Object>() {
+                                {
+                                    put("x", x);
+                                    put("y", y);
+                                    put("z", z);
+                                    put("time", time);
                                 }
+
+                                ;
                             });
-                        }));
+
+                        }
+                    });
+                }));
                 sensor.correctedMagneticField().start();
                 sensor.start();
                 result.success(true);
                 break;
             case "startQuaternion":
                 s = this.getSensor(methodCall);
-                s.quaternion()
-                        .addRouteAsync(source1 -> source1.stream((data, env) -> {
+                s.quaternion().addRouteAsync(source1 -> source1.stream((data, env) -> {
 
-                            this.activity.runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    float w = data.value(Quaternion.class).w();
-                                    float x = data.value(Quaternion.class).x();
-                                    float y = data.value(Quaternion.class).y();
-                                    float z = data.value(Quaternion.class).z();
-                                    long time = data.timestamp().getTimeInMillis();
-                                    deviceChannel.invokeMethod("onQuaternion",
-                                            new HashMap<String, Object>() {
-                                                {
-                                                    put("w", w);
-                                                    put("x", x);
-                                                    put("y", y);
-                                                    put("z", z);
-                                                    put("time", time);
-                                                }
-
-                                            ;
-                                            });
-
+                    this.activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            float w = data.value(Quaternion.class).w();
+                            float x = data.value(Quaternion.class).x();
+                            float y = data.value(Quaternion.class).y();
+                            float z = data.value(Quaternion.class).z();
+                            long time = data.timestamp().getTimeInMillis();
+                            deviceChannel.invokeMethod("onQuaternion", new HashMap<String, Object>() {
+                                {
+                                    put("w", w);
+                                    put("x", x);
+                                    put("y", y);
+                                    put("z", z);
+                                    put("time", time);
                                 }
+
+                                ;
                             });
-                        }));
+
+                        }
+                    });
+                }));
                 s.quaternion().start();
                 s.start();
                 result.success(true);

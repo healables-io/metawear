@@ -8,8 +8,13 @@ import 'package:metawear_dart/metawear.dart';
 import 'package:metawear_dart/modules/modules.dart';
 
 class MetamotionRLBoard implements MetawearBoard {
+  @override
   final String id;
+
+  @override
   final String name;
+
+  @override
   late String? mac;
 
   final MethodChannel _channel;
@@ -46,6 +51,11 @@ class MetamotionRLBoard implements MetawearBoard {
   Future<bool> isConnected() async {
     return await _channel.invokeMethod<bool>('isConnected') ?? false;
   }
+
+  @override
+  Stream<bool> get state => _stateChannel
+      .receiveBroadcastStream()
+      .map((event) => event['connected'] as bool);
 
   @override
   void onDisconnected(void Function(String? reason) callback) {
