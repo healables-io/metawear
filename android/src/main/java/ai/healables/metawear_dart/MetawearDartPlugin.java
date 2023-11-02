@@ -95,7 +95,10 @@ public class MetawearDartPlugin
   @Override
   public void onDetachedFromActivity() {
     activity = null;
-    context.unbindService(this);
+    try {
+      context.unbindService(this);
+    } catch (Exception e) {
+    }
   }
 
   @Override

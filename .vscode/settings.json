@@ -3,5 +3,6 @@
         "Metamotion",
         "metawear"
     ],
-    "java.configuration.updateBuildConfiguration": "automatic"
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "dart.flutterSdkPath": "./.fvm/flutter_sdk"
 }
