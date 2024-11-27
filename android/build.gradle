@@ -27,6 +27,7 @@ rootProject.allprojects {
 apply plugin: 'com.android.library'
 
 android {
+    namespace "ai.healables.metawear_dart.metawear_dart"
     compileSdkVersion 31
 
     compileOptions {
